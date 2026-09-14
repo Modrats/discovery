@@ -173,7 +173,7 @@ resource "azurerm_user_assigned_identity" "workload" {
 # -----------------------------------------------------------------------------
 resource "azurerm_storage_account" "outputs" {
   name                = local.storage_account_name
-  location            = data.azurerm_resource_group.rg.location
+  location            = var.location
   resource_group_name = data.azurerm_resource_group.rg.name
 
   account_kind             = "StorageV2"

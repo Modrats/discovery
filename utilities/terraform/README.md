@@ -86,6 +86,7 @@ The first apply also needs the identity running Terraform to hold **Storage Blob
 * **Workspace `context deadline exceeded`** — the workspace is usually provisioned server-side by the time Terraform gives up. Confirm it shows `Succeeded`, `terraform import` it, then re-plan; the run picks up where it left off.
 * **Storage 403 on apply** — the blob data role hasn't propagated. Wait ~60 s and re-run.
 * **`PrincipalNotFoundError` on first apply** — Entra ID replication race for a freshly-created UAMI. Re-run apply; no code change needed.
+* **Changing `location` after deploy** — the storage account and its private endpoint are created in `location` (the workspace region), and `location` forces replacement on `azurerm_storage_account`. Existing deployments that change `location` therefore need a blob data migration, not a straight apply.
 
 ## Architecture
 
