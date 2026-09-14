@@ -227,7 +227,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "blob_supercomputer" {
 
 resource "azurerm_private_endpoint" "blob" {
   name                = "pe-blob-${local.storage_account_name}"
-  location            = data.azurerm_resource_group.rg.location
+  location            = azurerm_virtual_network.workspace.location
   resource_group_name = data.azurerm_resource_group.rg.name
   subnet_id           = azurerm_subnet.private_endpoint.id
 
