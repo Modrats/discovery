@@ -1,9 +1,9 @@
 # -----------------------------------------------------------------------------
 # providers.tf
 #
-# We use TWO Terraform providers on purpose (see docs/adr/0001-network-isolation-posture.md):
+# Azure resource ownership is split between two providers (see README.md):
 #
-#   * azurerm  -> stable, typed resources for every non-Discovery primitive
+#   * azurerm  -> stable, typed resources for platform primitives
 #                 (VNet, subnets, UAMI, storage account, blob CORS, role
 #                 assignments).
 #
@@ -12,8 +12,8 @@
 #                 the AzureRM provider today; azapi talks directly to the ARM
 #                 REST API at a pinned API version.
 #
-# Pinning: azapi resources in this module use API version 2026-06-01 (the
-# GA Discovery API). Do not downgrade to 2026-02-01-preview.
+# Pinning: Discovery resources use API version 2026-06-01 (the GA API).
+# The blob container uses the Storage ARM API.
 # -----------------------------------------------------------------------------
 
 terraform {
@@ -45,7 +45,7 @@ provider "azurerm" {
   # `shared_access_key_enabled = false` on our storage account means the
   # post-create data-plane readiness poll must use AAD instead of keys.
   # Requires the terraform-runner identity to hold a blob data role on the
-  # storage account (or its RG/subscription). See quickstart Step 6.
+  # storage account (or its RG/subscription). See the README quickstart.
   storage_use_azuread = true
 }
 

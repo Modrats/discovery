@@ -1,14 +1,13 @@
 # -----------------------------------------------------------------------------
 # variables.tf
 #
-# Mirrors the parameters in ../discovery.bicep. Names, defaults, and
-# constraints are kept in sync so this module is a drop-in Terraform port.
+# Inputs for the full-stack Terraform deployment described in README.md.
 # -----------------------------------------------------------------------------
 
 # ---- resource group + region ------------------------------------------------
 
 variable "resource_group_name" {
-  description = "Existing resource group that will hold every resource. Created imperatively in Step 2 of the quickstart."
+  description = "Existing resource group for the customer-managed resources, created outside Terraform as shown in the README quickstart"
   type        = string
 }
 
@@ -18,13 +17,11 @@ variable "location" {
 
   # eastus2 is intentionally excluded: the Discovery RP advertises support in
   # metadata but rejects new supercomputer creates there, so an apply fails
-  # ~30m in. Keeping it out of this allowlist makes `terraform validate` fail
-  # fast instead. This mirrors preflight.sh's KNOWN_BAD_REGIONS blocklist and
-  # preflight-checks/06-approved-regions.sh's positive allowlist. See the region
-  # table in README.md Step 1.4 before changing this list.
+  # ~30m in. Input validation rejects it during planning. Review service
+  # availability with Discovery Toolbox before changing this allowlist.
   validation {
     condition     = contains(["eastus", "uksouth", "swedencentral"], var.location)
-    error_message = "Location must be one of: eastus, uksouth, swedencentral. (eastus2 is Discovery-advertised but blocked; see README Step 1.4.)"
+    error_message = "Location must be one of: eastus, uksouth, swedencentral. See the README Configure section for region restrictions."
   }
 }
 
@@ -231,7 +228,7 @@ variable "bookshelf_public_network_access" {
 }
 
 variable "network_isolation" {
-  description = "Workspace network isolation mode, surfaced via the NetworkIsolation tag. Must be true whenever the agent/private-endpoint/workspace subnet IDs are supplied (as they always are here): the Discovery RP then VNet-injects the managed Container Apps environment and creates private endpoints (Cosmos, Search, etc.) in the private endpoint subnet. Setting this false while passing subnet IDs produces a broken hybrid where Cosmos public access is disabled but no private endpoint is created, leaving the managed backend unable to reach Cosmos (agent upsert then fails with InternalServerError and teardown deadlocks)."
+  description = "Workspace network isolation mode, surfaced via the NetworkIsolation tag. True supplies all three workspace subnet IDs; false omits them. The platform VNets, subnets, and private storage endpoint are created in either mode"
   type        = bool
   default     = true
 }
