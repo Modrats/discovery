@@ -110,7 +110,7 @@ param enableGhcpAiFeatures bool = true
 @description('Enable the VS Code Extension Marketplace in the Discovery workspace via the discovery.workbench.enableExtensions tag.')
 param enableExtensions bool = true
 
-@description('Workspace network isolation mode via the NetworkIsolation tag. Must be true whenever agentSubnetId/privateEndpointSubnetId/workspaceSubnetId are supplied: the RP then VNet-injects the managed Container Apps environment and creates private endpoints (Cosmos, Search, etc.) in the privateEndpointSubnet. Setting this false while passing subnet IDs produces a broken hybrid where Cosmos public access is disabled but no private endpoint is created, leaving the managed backend unable to reach Cosmos.')
+@description('Workspace network isolation mode via the NetworkIsolation tag. Defaults to true. Set to false for the public preview mode exposed by the published Discovery quickstart; subnet IDs remain supplied in both modes.')
 param networkIsolation bool = true
 
 // Built-in role definition IDs
@@ -325,13 +325,13 @@ resource clusterNetworkContributorAssignment 'Microsoft.Authorization/roleAssign
   }
 }
 
-// Kubelet identity: must hold Managed Identity Operator on the cluster identity (Discovery API requirement).
-resource kubeletManagedIdentityOperatorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(clusterIdentity.id, kubeletIdentity.id, managedIdentityOperatorRoleId)
-  scope: clusterIdentity
+// Cluster identity: operates on the pre-created kubelet identity used by AKS.
+resource clusterManagedIdentityOperatorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(kubeletIdentity.id, clusterIdentity.id, managedIdentityOperatorRoleId)
+  scope: kubeletIdentity
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', managedIdentityOperatorRoleId)
-    principalId: kubeletIdentity.properties.principalId
+    principalId: clusterIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
 }
@@ -377,7 +377,7 @@ resource supercomputer 'Microsoft.Discovery/supercomputers@2026-06-01' = {
   dependsOn: [
     vnet
     clusterNetworkContributorAssignment
-    kubeletManagedIdentityOperatorAssignment
+    clusterManagedIdentityOperatorAssignment
   ]
   properties: {
     subnetId: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, 'aksSubnet')

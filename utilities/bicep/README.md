@@ -36,7 +36,11 @@ Every identity slot receives only the specific role it needs, scoped as narrowly
 | Cluster identity | Managed Identity Operator | Kubelet identity |
 | Kubelet identity | AcrPull | Container registry |
 
-Reference: [Discovery advanced RBAC — granular role assignments per identity](https://learn.microsoft.com/azure/microsoft-discovery/) (link to be finalized).
+References: [AKS pre-created kubelet managed identity](https://learn.microsoft.com/azure/aks/managed-identity-overview#pre-created-kubelet-managed-identity) and [Discovery granular role assignments](https://learn.microsoft.com/azure/microsoft-discovery/concept-managed-identities#advanced-configuration-granular-role-assignments-per-identity).
+
+## Workspace networking
+
+In [uami.bicep](uami.bicep), `networkIsolation` defaults to `true`; `false` selects public preview access. Both values retain all three workspace subnet IDs.
 
 ## Quick check
 
