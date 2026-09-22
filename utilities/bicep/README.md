@@ -8,7 +8,7 @@ ms.topic: how-to
 
 > **Status:** Draft. Under active development and testing. Interfaces, defaults, and role scopes may change before this is promoted to a supported utility. Do **not** use in production yet.
 
-Single-file Bicep template that deploys a working Microsoft Discovery footprint with **least-privilege** role assignments per identity slot, rather than the coarse-grained "Owner on the resource group" pattern used in most quickstarts.
+[uami.bicep](uami.bicep) deploys a Microsoft Discovery footprint with separate user-assigned managed identities and **least-privilege** role assignments per identity slot. For the maintained upstream quickstart, see [Microsoft Discovery documentation](https://learn.microsoft.com/azure/microsoft-discovery/).
 
 For a supported, production-ready deployment path today, use the Terraform utility in [`utilities/terraform/`](../terraform/README.md).
 
@@ -20,9 +20,8 @@ A single resource group containing:
 * Microsoft Discovery Workspace + Project
 * Chat Model Deployment
 * Discovery Storage Container backed by a dedicated Storage Account
-* Virtual Network + AKS subnet
-* User-assigned managed identities (workspace, cluster, kubelet)
-* Azure Container Registry with RBAC-only auth
+* Virtual Network with AKS, node pool, workspace, private endpoint, agent, and search subnets
+* User-assigned managed identities (workspace, cluster, kubelet, workload)
 
 ## Least-privilege role model
 
@@ -34,7 +33,9 @@ Every identity slot receives only the specific role it needs, scoped as narrowly
 | Workspace identity | Storage Blob Data Contributor | Storage account |
 | Cluster identity | Network Contributor | **AKS subnet only** (not the VNet) |
 | Cluster identity | Managed Identity Operator | Kubelet identity |
-| Kubelet identity | AcrPull | Container registry |
+| Kubelet identity | AcrPull | Resource group (no registry is created) |
+| Kubelet identity | Storage Blob Data Contributor | Storage account |
+| Workload identity | Storage Blob Data Contributor | Storage account |
 
 References: [AKS pre-created kubelet managed identity](https://learn.microsoft.com/azure/aks/managed-identity-overview#pre-created-kubelet-managed-identity) and [Discovery granular role assignments](https://learn.microsoft.com/azure/microsoft-discovery/concept-managed-identities#advanced-configuration-granular-role-assignments-per-identity).
 
@@ -47,10 +48,10 @@ In [uami.bicep](uami.bicep), `networkIsolation` defaults to `true`; `false` sele
 Build the template locally to validate:
 
 ```bash
-az bicep build --file discovery.bicep --stdout > /dev/null
+az bicep build --file uami.bicep --stdout > /dev/null
 ```
 
-Zero warnings, zero errors expected.
+The build should complete without errors. BCP081 warnings can occur when the installed Bicep compiler lacks type definitions for the Discovery API; those resource properties require service-side validation.
 
 ## Known gaps (tracked here until the utility exits draft)
 
